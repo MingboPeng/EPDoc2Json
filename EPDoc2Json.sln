@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.136
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EPDoc2Json", "EPDoc2Json\EPDoc2Json.csproj", "{3E28CDCF-EC84-4AFA-8D3A-9C46AE7BC58B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3E28CDCF-EC84-4AFA-8D3A-9C46AE7BC58B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3E28CDCF-EC84-4AFA-8D3A-9C46AE7BC58B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3E28CDCF-EC84-4AFA-8D3A-9C46AE7BC58B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3E28CDCF-EC84-4AFA-8D3A-9C46AE7BC58B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B2C11881-732A-4E2E-8BFB-A7C0E4F550A0}
+	EndGlobalSection
+EndGlobal
