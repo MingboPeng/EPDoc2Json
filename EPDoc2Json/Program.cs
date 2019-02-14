@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
+using Newtonsoft.Json;
 
 namespace EPDoc2Json
 {
@@ -11,21 +12,26 @@ namespace EPDoc2Json
         static void Main(string[] args)
         {
             var file = @"C:\Users\mingo\Documents\GitHub\EPDoc2Json\Doc\group-heating-and-cooling-coils.tex";
-            ReadTexAsObj(file);
+            var sectionObj = ReadTexAsObj(file);
 
-            Console.WriteLine("Hello World!");
+            using (StreamWriter json = File.CreateText(@"C:\Users\mingo\Documents\GitHub\EPDoc2Json\DocJson\group-heating-and-cooling-coils.json"))
+            {
+                JsonSerializer serializer = new JsonSerializer();
+                serializer.Serialize(json, sectionObj);
+            }
+            
+            //Console.WriteLine("Hello World!");
 
             Console.Read();
         }
-        static void ReadTexAsObj(string TexFile)
+        static dynamic ReadTexAsObj(string TexFile)
         {
             var lines = File.ReadAllLines(TexFile, System.Text.Encoding.ASCII).ToList();
             dynamic section = new ExpandoObject();
             
             //sub-sections
             var subSections = new List<ExpandoObject>();
-            section.subsection = subSections;
-            var subSectionCount = 0;
+            
 
             var curIndex = 0;
             var total = lines.Count;
@@ -36,172 +42,25 @@ namespace EPDoc2Json
 
                 if (current.StartsWith("\\subsection"))
                 {
-                    dynamic subsection = new ExpandoObject();
-                    var name = CleanHeader(current);
-                    Console.WriteLine(name);
 
-                    subsection.Name = name;
-                    subsection.Note = new List<string>();
-                    
-                    curIndex ++;
-
-                    LoopSubsection(ref curIndex, total, ref lines, ref subsection);
+                    var subsection = LoopSubsection(ref curIndex, total, ref lines);
 
                     subSections.Add(subsection);
-                    subSectionCount++;
-
-
+                    
                 }
-                //else
-                //{
-                //    if (subSectionCount == 0)
-                //    {
-                //        continue;
-                //    }
-
-                //    if (current.StartsWith("\\begin{itemize}") ||
-                //      current.StartsWith("\\item") ||
-                //      current.StartsWith("\\end{itemize}"))
-                //    {
-                //        continue;
-                //    }
-
-
-                //    //var currentSub = subSections.Last();
-                //    //currentSub
-
-                //}
 
                 curIndex++;
             }
 
+            section.subsection = subSections;
+
+            return section;
 
 
 
-        }
-        static void ReadTex(string TexFile)
-        {
-            var lines = File.ReadAllLines(TexFile, System.Text.Encoding.GetEncoding(1252)).ToList();
-            var c = lines.Count();
-            var subSecs = new List<List<string>>();
-
-            var subCount = 0;
-            for (int i = 0; i < c; i++)
-            {
-                string current = lines[i];
-                
-                if (current.StartsWith("\\subsection"))
-                {
-                    subSecs.Add(new List<string>() { current });
-                    subCount++;
-                }
-                else
-                {
-                    if (subCount == 0)
-                    {
-                        continue;
-                    }
-
-                    if (current.StartsWith("\\begin{itemize}") ||
-                      current.StartsWith("\\item") ||
-                      current.StartsWith("\\end{itemize}"))
-                    {
-                        continue;
-                    }
-
-                    var currentSub = subSecs.Last();
-                    currentSub.Add(current);
-                    
-                }
-
-
-            }
-        }
-
-        static void MakeSubsection(List<string> strings)
-        {
-            var subsec = strings;
-            dynamic subObj = new ExpandoObject();
-
-            subObj.SubSubSection = new List<ExpandoObject>();
-            var curLine = 0;
-            var total = subsec.Count;
-            var isInSubSubSec = false;
-            var subsubCount = 0;
-            while (curLine < total)
-            {
-                var item = subsec[curLine];
-                if (item.StartsWith("\\subsection"))
-                {
-                    subObj.Name = item;
-                    isInSubSubSec = false;
-                }
-
-                if (item.StartsWith("\\subsubsection"))
-                {
-                    dynamic subsubObj = new ExpandoObject();
-                    subsubObj.Paragraph = new List<ExpandoObject>();
-                    subsubObj.Name = item;
-                    subObj.SubSubSection.Add(subsubObj);
-                    isInSubSubSec = true;
-                    subsubCount++;
-                }
-                else
-                {
-
-                    if (isInSubSubSec)
-                    {
-                        dynamic subsubObj = subObj.SubSubSection[subsubCount - 1];
-
-                        if (item.StartsWith("\\paragraph"))
-                        {
-                            dynamic paragragh = new ExpandoObject();
-                            paragragh.Name = System.Text.RegularExpressions.Regex.Split(item.Replace("\\paragraph", ""), "label")[0].Trim(new char[] { '{', '\\', '}' });
-                            paragragh.Note = new List<string>();
-                            subsubObj.Paragraph.Add(paragragh);
-                        }
-                        else
-                        {
-                            var curPCount = subsubObj.Paragraph.Count;
-                            if (curPCount > 0)
-                            {
-                                dynamic paragragh = subsubObj.Paragraph[curPCount - 1];
-                                paragragh.Note.Add(item);
-
-                            }
-
-
-                        }
-                    }
-                }
-                curLine++;
-            }
-
-
-        }
-
-        static string CleanSubSection(string text)
-        {
-            //    \subsection{Coil:Cooling:Water}\label{coilcoolingwater}
-            var strings = text.Substring(11).Split("\\label");
-            var name = strings[0].Trim(new char[] { '{', '\\', '}' });
-            var label = strings[1].Trim(new char[] { '{', '\\', '}' });
-
-            return name;
         }
 
        
-        static string CleanSubSubSection(string text)
-        {
-            //   \subsubsection{Inputs}\label{inputs-35}
-            var strings = text.Substring(14).Split("\\label");
-            var name = strings[0].Trim(new char[] { '{', '\\', '}' });
-            var label = strings[1].Trim(new char[] { '{', '\\', '}' });
-
-            return name;
-
-        }
-
         static string CleanHeader(string text)
         {
 
@@ -210,90 +69,212 @@ namespace EPDoc2Json
             //   \paragraph{ Field: Name}\label{ field - name - 34}
 
             var firstSp = text.IndexOf('{');
-            var chars = new char[] { '{', '\\', '}', ' ' };
-            var strings = text.Substring(firstSp).Split("\\label");
+            var strings = text.Substring(firstSp).Split(new char[] { '\\' });
 
-            var name = strings[0].Trim(chars);
-            var label = strings[1].Trim(chars);
+            var name = strings[0];
+            name = name.Substring(1, name.Length - 2);
+            
+            //var label = strings[1].Trim(chars);
 
-            return name;
+            return CleanString(name.Trim());
         }
 
-        static void LoopSubsection(ref int CurrentIndex, int TotalCount, ref List<string> AllLines, ref dynamic SubsectionObj)
+        static string CleanString(string text)
+        {
+            return new System.Text.StringBuilder(text)
+              .Replace("\\begin{lstlisting}", "")
+              .Replace("\\end{lstlisting}","")
+              .Replace("\\begin{itemize}", "")
+              .Replace("\\item", "")
+              .Replace("\\end{itemize}","")
+              .Replace("\\textit", "")
+              .Replace("\\textbf", "")
+              .Replace("\\emph", "")
+              .Replace("\\(", "")
+              .Replace("\\)", "")
+              .Replace("\\%","%")
+              .Replace("\\textgreater{}",">")
+              .Replace("\\textless{}", "<")
+              .Replace("{[}","[")
+              .Replace("{]}", "]")
+              .Replace("{[]}", "")
+              .Replace("\\begin{enumerate}","")
+              .Replace("\\def\\labelenumi{\\arabic{enumi})}","")
+              .Replace("\\tightlist","")
+              .Replace("\\end{enumerate}","")
+              .Replace("\\#","")
+              .ToString();
+        }
+
+        static dynamic LoopSubsection(ref int CurrentIndex, int TotalCount, ref List<string> AllLines)
         {
             var curIndex = CurrentIndex;
+            var currenLine = AllLines[curIndex];
+
+            dynamic subsection = new ExpandoObject();
+            var subName = CleanHeader(currenLine);
+            subsection.Name = subName;
+            var note = new List<string>();
+            var subsubsections = new List<dynamic>();
+            var paragraph = new List<dynamic>();
+
+            Console.WriteLine("    -{0}", subName);
+            curIndex++;
+
             while (curIndex < TotalCount)
             {
-                var subCurrent = AllLines[curIndex];
+                currenLine = AllLines[curIndex];
                 //break when hits next subsection
-                if (subCurrent.StartsWith("\\subsection"))
+                if (currenLine.StartsWith("\\subsection"))
                 {
                     Console.WriteLine("");
+                    curIndex--;
                     break;
                 }
 
                 //find the items in subsection
-                if (subCurrent.StartsWith("\\subsubsection"))
+                if (currenLine.StartsWith("\\subsubsection"))
                 {
-                    dynamic subsubsection = new ExpandoObject();
-                    var subName = CleanHeader(subCurrent);
-                    subsubsection.Name = subName;
+                    
+                    var subsubsection = LoopSubsubsection(ref curIndex, TotalCount, ref AllLines);
+                    subsubsections.Add(subsubsection);
 
-
-                    Console.WriteLine("    -{0}", subName);
-                    curIndex++;
-
-                    LoopSubsubsection(ref curIndex, TotalCount, ref AllLines, ref subsubsection);
-
-                    //SubsectionObj.Add(subsubsection);
+                }
+                else if (currenLine.StartsWith("\\paragraph"))
+                {
+                    var para = LoopParagraph(ref curIndex, TotalCount, ref AllLines);
+                    paragraph.Add(para);
 
                 }
                 else
                 {
-                    SubsectionObj.Note.Add(subCurrent);
+                    var cleaned = CleanString(currenLine);
+                    if (note.Any() || !string.IsNullOrEmpty(cleaned))
+                    {
+                        note.Add(cleaned);
+                    }
                 }
 
                 
                 curIndex++;
 
-
-
             }
+
+            if (subsubsections.Any())
+                subsection.Subsubsections = subsubsections;
+
+            if (note.Any())
+                subsection.Note = note;
+
+            if (paragraph.Any())
+                subsection.Paragraph = paragraph;
+
+            return subsection;
         }
 
-        static void LoopSubsubsection(ref int CurrentIndex, int TotalCount, ref List<string> AllLines, ref dynamic SubsectionObj)
+        static dynamic LoopSubsubsection(ref int curIndex, int TotalCount, ref List<string> AllLines)
         {
-            var curIndex = CurrentIndex;
+            var currenLine = AllLines[curIndex];
+
+            dynamic subsubsection = new ExpandoObject();
+            var subName = CleanHeader(currenLine);
+            subsubsection.Name = subName;
+            var paragraph = new List<dynamic>();
+            var note = new List<string>();
+
+            Console.WriteLine("    -{0}", subName);
+            curIndex++;
+            
             while (curIndex < TotalCount)
             {
-                var subsubCurrent = AllLines[curIndex];
+                currenLine = AllLines[curIndex];
+                
 
                 //break when hits next subsubsection or subsection
-                if (subsubCurrent.StartsWith("\\subsubsection")||
-                    subsubCurrent.StartsWith("\\subsection"))
+                if (currenLine.StartsWith("\\subsubsection")||
+                    currenLine.StartsWith("\\subsection"))
                 {
                     Console.WriteLine("");
+                    curIndex--;
                     break;
                 }
 
                 //find the items in subsubsection
-                if (subsubCurrent.StartsWith("\\paragraph"))
+                if (currenLine.StartsWith("\\paragraph"))
                 {
-                    dynamic paragraph = new ExpandoObject();
-                    var paragraphName = CleanHeader(subsubCurrent);
-                    paragraph.Name = paragraphName;
 
+                    var para = LoopParagraph(ref curIndex, TotalCount, ref AllLines);
+                    paragraph.Add(para);
 
-                    Console.WriteLine("        -{0}", paragraphName);
+                }
+                else
+                {
 
-
+                    var cleaned = CleanString(currenLine);
+                    if (note.Any() || !string.IsNullOrEmpty(cleaned))
+                    {
+                        note.Add(cleaned);
+                    }
                 }
                 
                 curIndex++;
 
-
-
+                
             }
+
+            if (paragraph.Any())
+                subsubsection.Paragraph = paragraph;
+
+            if (note.Any())
+                subsubsection.Note = note;
+
+            return subsubsection;
+        }
+
+        static dynamic LoopParagraph(ref int curIndex, int TotalCount, ref List<string> AllLines)
+        {
+            var currenLine = AllLines[curIndex];
+
+            dynamic paragraph = new ExpandoObject();
+            var paragraphName = CleanHeader(currenLine);
+            paragraph.Name = paragraphName;
+            var note = new List<string>();
+
+
+            Console.WriteLine("        -{0}", paragraphName);
+
+            curIndex++;
+            while (curIndex < TotalCount)
+            {
+                currenLine = AllLines[curIndex];
+
+                //break when hits next subsubsection or subsection
+                if (currenLine.StartsWith("\\subsubsection") ||
+                    currenLine.StartsWith("\\subsection") ||
+                    currenLine.StartsWith("\\paragraph"))
+                {
+                    Console.WriteLine("");
+                    curIndex--;
+                    break;
+                }
+
+                //find the content of paragraph 
+                var cleaned = CleanString(currenLine);
+                if (note.Any() || !string.IsNullOrEmpty(cleaned))
+                {
+                    note.Add(cleaned);
+                }
+                
+                //Console.WriteLine("            -{0}", checkedContent);
+
+                curIndex++;
+                
+            }
+            
+            if (note.Any())
+                paragraph.Note = note;
+
+            return paragraph;
         }
 
     }
