@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
-using Newtonsoft.Json;
 
 namespace EPDoc2Json
 {
@@ -54,7 +53,7 @@ namespace EPDoc2Json
             //   \paragraph{ Field: Name}\label{ field - name - 34}
 
             var firstSp = text.IndexOf('{');
-            var strings = text.Substring(firstSp).Split(new char[] { '\\' });
+            var strings = text.Substring(firstSp).Split("\\label");
 
             var name = strings[0];
             name = name.Substring(1, name.Length - 2);
@@ -63,6 +62,7 @@ namespace EPDoc2Json
 
             return CleanString(name.Trim());
         }
+        
 
         static string CleanString(string text)
         {
