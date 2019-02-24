@@ -88,6 +88,10 @@ namespace EPDoc2Json
               .Replace("\\tightlist", "")
               .Replace("\\end{enumerate}", "")
               .Replace("\\#", "")
+              .Replace("\\begin{equation}","")
+              .Replace("\\end{equation}", "")
+              .Replace("^{o}","")
+              .Replace("\"", "")
               .ToString();
         }
 
@@ -226,7 +230,7 @@ namespace EPDoc2Json
             var note = new List<string>();
 
 
-            Console.WriteLine("        -{0}", paragraphName);
+            //Console.WriteLine("        -{0}", paragraphName);
 
             curIndex++;
             while (curIndex < TotalCount)
@@ -238,7 +242,7 @@ namespace EPDoc2Json
                     currenLine.StartsWith("\\subsection") ||
                     currenLine.StartsWith("\\paragraph"))
                 {
-                    Console.WriteLine("");
+                    //Console.WriteLine("");
                     curIndex--;
                     break;
                 }
