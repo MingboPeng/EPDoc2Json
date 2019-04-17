@@ -8,13 +8,26 @@ namespace EPDoc2Json
     {
         private static void Main(string[] args)
         {
-            var file = @"..\..\..\..\Doc\group-heating-and-cooling-coils.tex";
-            var sectionObj = TexHelper.ReadTexAsObj(file);
-
-            var jsonFile = @"..\..\..\..\DocJson\group-heating-and-cooling-coils.json";
-            SaveAsJson(jsonFile, sectionObj);
+            var dir = @"..\..\..\..\Doc\";
+            var texfiles = Directory.GetFiles(dir, "*.tex");
+            
+            foreach (var TexFilePath in texfiles)
+            {
+              ProcessSingleFile(TexFilePath);
+            }
 
             Console.Read();
+        }
+
+        private static void ProcessSingleFile(string TexFilePath)
+        {
+            var sectionObj = TexHelper.ReadTexAsObj(TexFilePath);
+            // Output into DocJson/*.json
+            FileInfo f = new FileInfo(TexFilePath);
+            var JsonFilePath = Path.Combine(f.Directory.Parent.FullName, "DocJson", Path.ChangeExtension(f.Name, ".json"));
+            Console.WriteLine(TexFilePath, JsonFilePath);
+
+            SaveAsJson(JsonFilePath, sectionObj);
         }
 
         private static void SaveAsJson(string JsonFilePath, object SerialiableObj)
