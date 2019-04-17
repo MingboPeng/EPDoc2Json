@@ -35,6 +35,8 @@ namespace EPDoc2Json
             using (StreamWriter json = File.CreateText(JsonFilePath))
             {
                 JsonSerializer serializer = new JsonSerializer();
+                // Pretty printing indented instead of one-line
+                serializer.Formatting = Formatting.Indented;
                 serializer.Serialize(json, SerialiableObj);
             }
         }
