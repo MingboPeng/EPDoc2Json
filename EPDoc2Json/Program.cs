@@ -8,10 +8,10 @@ namespace EPDoc2Json
     {
         private static void Main(string[] args)
         {
-            var file = @"C:\Users\mingo\Documents\GitHub\EPDoc2Json\Doc\group-heating-and-cooling-coils.tex";
+            var file = @"..\..\..\..\Doc\group-heating-and-cooling-coils.tex";
             var sectionObj = TexHelper.ReadTexAsObj(file);
 
-            var jsonFile = @"C:\Users\mingo\Documents\GitHub\EPDoc2Json\DocJson\group-heating-and-cooling-coils.json";
+            var jsonFile = @"..\..\..\..\DocJson\group-heating-and-cooling-coils.json";
             SaveAsJson(jsonFile, sectionObj);
 
             Console.Read();
