@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace EPDoc2Json
 {
@@ -66,7 +67,9 @@ namespace EPDoc2Json
 
         static string CleanString(string text)
         {
-            return new System.Text.StringBuilder(text)
+            //remove "  \hyperref[outputtabletimebins]" in "  \hyperref[outputtabletimebins]{Output:Table:TimeBins}"
+            var replacedText = Regex.Replace(text, @"\s{2}\\hyperref\[\w*\]", string.Empty);
+            return new System.Text.StringBuilder(replacedText)
               .Replace("\\begin{lstlisting}", "")
               .Replace("\\end{lstlisting}", "")
               .Replace("\\begin{itemize}", "")
