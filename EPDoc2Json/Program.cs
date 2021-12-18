@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.IO;
+using System.Linq;
 
 namespace EPDoc2Json
 {
@@ -8,26 +9,75 @@ namespace EPDoc2Json
     {
         private static void Main(string[] args)
         {
-            var dir = @"..\..\..\..\Doc\";
-            var texfiles = Directory.GetFiles(dir, "*.tex");
-            
-            foreach (var TexFilePath in texfiles)
+            //var dir = @"..\..\..\..\Doc\";
+            //var texfiles = Directory.GetFiles(dir, "*.tex");
+
+            var folder = $"./download";
+            Directory.CreateDirectory(folder);
+            var outputFolder = $"./outputs";
+            Directory.CreateDirectory(outputFolder);
+
+            foreach (var texfile in _texList)
             {
-              ProcessSingleFile(TexFilePath);
+                var tex = DownloadTex(folder, texfile);
+                ProcessSingleFile(outputFolder, tex);
+
             }
 
             Console.Read();
         }
 
-        private static void ProcessSingleFile(string TexFilePath)
+
+        private static string[] _texList = {
+
+            "group-air-distribution-equipment.tex",
+            "group-air-distribution.tex",
+            "group-condenser-equipment.tex",
+            "group-controllers.tex",
+            "group-design-objects.tex",
+            "group-fans.tex",
+            "group-heat-recovery.tex",
+            "group-heating-and-cooling-coils.tex",
+            "group-performance-curves.tex",
+            "group-plant-condenser-loops.tex",
+            "group-plant-equipment.tex",
+            "group-pumps.tex",
+            "group-radiative-convective-units.tex",
+            "group-variable-refrigerant-flow-equipment.tex",
+            "group-zone-equipment.tex",
+            "group-zone-forced-air-units.tex"
+        };
+
+
+        private static string DownloadTex(string folder, string fileName)
+        {
+
+            //group-heating-and-cooling-coils.tex
+            var url = $"https://raw.githubusercontent.com/NREL/EnergyPlus/develop/doc/input-output-reference/src/overview/{fileName}";
+           
+            var saveAs = $"{folder}/{fileName}";
+            Console.WriteLine($"Downloading {fileName}");
+            using (var client = new System.Net.WebClient())
+            {
+                client.DownloadFile(url, saveAs);
+                Console.WriteLine($"Saved to {saveAs}");
+            }
+
+            return saveAs;
+
+        }
+
+        private static void ProcessSingleFile(string folder, string TexFilePath)
         {
             var sectionObj = TexHelper.ReadTexAsObj(TexFilePath);
             // Output into DocJson/*.json
             FileInfo f = new FileInfo(TexFilePath);
-            var JsonFilePath = Path.Combine(f.Directory.Parent.FullName, "DocJson", Path.ChangeExtension(f.Name, ".json"));
+            var JsonFilePath = Path.Combine(folder, Path.ChangeExtension(f.Name, ".json"));
             Console.WriteLine(TexFilePath, JsonFilePath);
 
             SaveAsJson(JsonFilePath, sectionObj);
+
+            Console.WriteLine($"Saved to {JsonFilePath}");
         }
 
         private static void SaveAsJson(string JsonFilePath, object SerialiableObj)
