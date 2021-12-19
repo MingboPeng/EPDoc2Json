@@ -33,19 +33,26 @@ namespace EPDoc2Json
             "group-air-distribution-equipment.tex",
             "group-air-distribution.tex",
             "group-condenser-equipment.tex",
+            "group-coil-cooling-dx.tex",
             "group-controllers.tex",
             "group-design-objects.tex",
             "group-fans.tex",
             "group-heat-recovery.tex",
             "group-heating-and-cooling-coils.tex",
+            "group-humidifiers-and-dehumidifiers.tex",
             "group-performance-curves.tex",
             "group-plant-condenser-loops.tex",
             "group-plant-equipment.tex",
             "group-pumps.tex",
             "group-radiative-convective-units.tex",
+            "group-unitary-equipment.tex",
             "group-variable-refrigerant-flow-equipment.tex",
+            "group-water-systems.tex",
+            "group-water-heaters.tex",
             "group-zone-equipment.tex",
-            "group-zone-forced-air-units.tex"
+            "group-zone-forced-air-units.tex",
+            "group-setpoint-managers.tex",
+
         };
 
 
