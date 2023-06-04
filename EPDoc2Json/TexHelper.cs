@@ -67,35 +67,72 @@ namespace EPDoc2Json
 
         static string CleanString(string text)
         {
-            //remove "  \hyperref[outputtabletimebins]" in "  \hyperref[outputtabletimebins]{Output:Table:TimeBins}"
-            var replacedText = Regex.Replace(text, @"\s{2}\\hyperref\[\w*\]", string.Empty);
-            return new System.Text.StringBuilder(replacedText)
-              .Replace("\\begin{lstlisting}", "")
-              .Replace("\\end{lstlisting}", "")
-              .Replace("\\begin{itemize}", "")
-              .Replace("\\item", "")
-              .Replace("\\end{itemize}", "")
-              .Replace("\\textit", "")
-              .Replace("\\textbf", "")
-              .Replace("\\emph", "")
-              .Replace("\\(", "")
-              .Replace("\\)", "")
-              .Replace("\\%", "%")
-              .Replace("\\textgreater{}", ">")
-              .Replace("\\textless{}", "<")
-              .Replace("{[}", "[")
-              .Replace("{]}", "]")
-              .Replace("{[]}", "")
-              .Replace("\\begin{enumerate}", "")
-              .Replace("\\def\\labelenumi{\\arabic{enumi})}", "")
-              .Replace("\\tightlist", "")
-              .Replace("\\end{enumerate}", "")
-              .Replace("\\#", "")
-              .Replace("\\begin{equation}","")
-              .Replace("\\end{equation}", "")
-              .Replace("^{o}","")
-              .Replace("\"", "")
-              .ToString();
+            var removes = new []
+            {
+                @"\\hyperref\[.*?\]",
+                @"\\begin{.*?}.*",
+                @"\\end{.*?}.*",
+
+                @"\\item",
+                @"\\protect",
+                @"\\hyperlink",
+
+                @"\\text.{2}",
+                @"\\emph",
+                @"\\{1,}\(", // remove \\( or \(
+                @"\\{1,}\)",
+                @"{\[\]}",
+                @"\\def\\labelenumi{\\arabic{enumi}\)?.*}",
+                @"\\tightlist",
+                @"\\#",
+                @"^{o}",
+                "\"",
+                @"\\toprule",
+                @"\\midrule",
+                @"\\endfirsthead",
+                @"\\endhead",
+                @"\\centering",
+                @"\\includegraphics.*", // anything starts with \includegraphics
+   
+                @"\\caption{.*",
+                @".*\\tabularnewline",
+                @"\\bottomrule",
+                @"~?\\ref",
+                @"\\setlength.*", // anything starts with \setlenght
+                @"\\si",
+
+
+            };
+
+            var replacements = new Dictionary<string, string>
+            {
+                { @"\\%", "%" }, 
+                { @"\\textgreater{}", ">" },
+                { @"\\textless{}", "<" },
+                { @"{\[}", "[" },
+                { @"{\]}", "]" },
+                { @"{?\\celsius}", "°C" },
+                { @"{?\\fahrenheit}", "°F" },
+                { @"(\\{)|({\\)", "{" },
+                { @"(\\})|(}\\)", "}" },
+                { @"$\\times$", "X" },
+                { @"\\," , " "},
+                { @"\\cdot" , "⋅"},
+                { @"\\Delta" , "Δ"},
+                { @"\\rho", "ρ" }
+
+            };
+
+            var replacedText = text;
+            foreach (var item in removes)
+            {
+                replacedText = Regex.Replace(replacedText, item, string.Empty, RegexOptions.IgnoreCase);
+            }
+            foreach (var item in replacements)
+            {
+                replacedText = Regex.Replace(replacedText, item.Key, item.Value, RegexOptions.IgnoreCase);
+            }
+            return replacedText;
         }
 
         static dynamic LoopSubsection(ref int CurrentIndex, int TotalCount, ref List<string> AllLines)
@@ -141,7 +178,7 @@ namespace EPDoc2Json
                 else
                 {
                     var cleaned = CleanString(currenLine);
-                    if (note.Any() || !string.IsNullOrEmpty(cleaned))
+                    if (!string.IsNullOrEmpty(cleaned))
                     {
                         note.Add(cleaned);
                     }
@@ -203,7 +240,7 @@ namespace EPDoc2Json
                 {
 
                     var cleaned = CleanString(currenLine);
-                    if (note.Any() || !string.IsNullOrEmpty(cleaned))
+                    if (!string.IsNullOrEmpty(cleaned))
                     {
                         note.Add(cleaned);
                     }
@@ -252,7 +289,7 @@ namespace EPDoc2Json
 
                 //find the content of paragraph 
                 var cleaned = CleanString(currenLine);
-                if (note.Any() || !string.IsNullOrEmpty(cleaned))
+                if (!string.IsNullOrEmpty(cleaned))
                 {
                     note.Add(cleaned);
                 }
