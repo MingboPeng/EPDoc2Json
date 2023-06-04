@@ -2,6 +2,8 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace EPDoc2Json
 {
@@ -19,11 +21,17 @@ namespace EPDoc2Json
 
             foreach (var texfile in _texList)
             {
-                var tex = DownloadTex(folder, texfile);
-                ProcessSingleFile(outputFolder, tex);
-
+               DownloadTex(folder, texfile).GetAwaiter().GetResult();
             }
 
+            foreach (var texfile in _texList)
+            {
+                var tex = Path.Combine(folder, texfile);
+                ProcessSingleFile(outputFolder, tex);
+            }
+
+            Console.WriteLine($"All files are generated in {outputFolder}.");
+            Console.WriteLine("Press ANY key to close.");
             Console.Read();
         }
 
@@ -56,19 +64,20 @@ namespace EPDoc2Json
         };
 
 
-        private static string DownloadTex(string folder, string fileName)
+        private static async Task<string> DownloadTex(string folder, string fileName)
         {
 
             //group-heating-and-cooling-coils.tex
             var url = $"https://raw.githubusercontent.com/NREL/EnergyPlus/develop/doc/input-output-reference/src/overview/{fileName}";
-           
-            var saveAs = $"{folder}/{fileName}";
-            Console.WriteLine($"Downloading {fileName}");
-            using (var client = new System.Net.WebClient())
-            {
-                client.DownloadFile(url, saveAs);
-                Console.WriteLine($"Saved to {saveAs}");
-            }
+
+            var saveAs = Path.Combine(folder, fileName);
+            Console.WriteLine($"Downloading {fileName} to {saveAs}");
+
+            using var client = new HttpClient();
+            var response = await client.GetAsync(url);
+            using var contentStream = await response.Content.ReadAsStreamAsync();
+            using var stream = new FileStream(saveAs, FileMode.Create, FileAccess.Write, FileShare.None);
+            await contentStream.CopyToAsync(stream);
 
             return saveAs;
 
