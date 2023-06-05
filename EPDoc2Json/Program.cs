@@ -21,7 +21,7 @@ namespace EPDoc2Json
 
             foreach (var texfile in _texList)
             {
-               DownloadTex(folder, texfile).GetAwaiter().GetResult();
+                DownloadTex(folder, texfile).GetAwaiter().GetResult();
             }
 
             foreach (var texfile in _texList)

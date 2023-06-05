@@ -77,15 +77,14 @@ namespace EPDoc2Json
                 @"\\protect",
                 @"\\hyperlink",
 
-                @"\\text.{2}",
+                
                 @"\\emph",
-                @"\\{1,}\(", // remove \\( or \(
-                @"\\{1,}\)",
+                @"\\{1,2}\(", // remove \\( \(
+                @"\\{1,2}\)", // remove \\) \)
                 @"{\[\]}",
                 @"\\def\\labelenumi{\\arabic{enumi}\)?.*}",
                 @"\\tightlist",
                 @"\\#",
-                @"^{o}",
                 "\"",
                 @"\\toprule",
                 @"\\midrule",
@@ -101,25 +100,30 @@ namespace EPDoc2Json
                 @"\\setlength.*", // anything starts with \setlenght
                 @"\\si",
 
-
             };
 
             var replacements = new Dictionary<string, string>
             {
-                { @"\\%", "%" }, 
+                { @"\\text.{2}{", "{" },
+                { @"\\%", "%" },
                 { @"\\textgreater{}", ">" },
                 { @"\\textless{}", "<" },
                 { @"{\[}", "[" },
                 { @"{\]}", "]" },
+                { @"\$\^\\circ\$", "°" },
+                { @"\^{o}", "°" },
+                { @"\?\?\s?C(elsius)?", "°C" },
                 { @"{?\\celsius}", "°C" },
+                { @"\?\?F", "°F" },
                 { @"{?\\fahrenheit}", "°F" },
-                { @"(\\{)|({\\)", "{" },
-                { @"(\\})|(}\\)", "}" },
-                { @"$\\times$", "X" },
-                { @"\\," , " "},
+                { @"\$\\times\$", "X" },
+                { @"\\[,;]" , " "},
                 { @"\\cdot" , "⋅"},
+           
                 { @"\\Delta" , "Δ"},
-                { @"\\rho", "ρ" }
+                { @"\\rho", "ρ" },
+                { @"(\\{)|({\\ )", "{" },
+                { @"(\\})|(}\\)", "}" },
 
             };
 
@@ -128,10 +132,12 @@ namespace EPDoc2Json
             {
                 replacedText = Regex.Replace(replacedText, item, string.Empty, RegexOptions.IgnoreCase);
             }
+
             foreach (var item in replacements)
             {
                 replacedText = Regex.Replace(replacedText, item.Key, item.Value, RegexOptions.IgnoreCase);
             }
+
             return replacedText;
         }
 
