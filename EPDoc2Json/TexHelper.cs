@@ -63,26 +63,24 @@ namespace EPDoc2Json
 
             return CleanString(name.Trim());
         }
-        
+
 
         static string CleanString(string text)
         {
-            var removes = new []
+            var removes = new[]
             {
                 @"\\hyperref\[.*?\]",
                 @"\\begin{.*?}.*",
                 @"\\end{.*?}.*",
-
                 @"\\item",
-                @"\\protect",
+                @"\\protect\s*",
                 @"\\hyperlink",
 
-                
+
                 @"\\emph",
                 @"\\{1,2}\(", // remove \\( \(
                 @"\\{1,2}\)", // remove \\) \)
                 @"{\[\]}",
-                @"\\def\\labelenumi{\\arabic{enumi}\)?.*}",
                 @"\\tightlist",
                 @"\\#",
                 "\"",
@@ -104,6 +102,7 @@ namespace EPDoc2Json
 
             var replacements = new Dictionary<string, string>
             {
+                // General text replacements
                 { @"\\text.{2}{", "{" },
                 { @"\\%", "%" },
                 { @"\\textgreater{}", ">" },
@@ -111,23 +110,40 @@ namespace EPDoc2Json
                 { @"{\[}", "[" },
                 { @"{\]}", "]" },
                 { @"\$?\^\\circ\$?", "°" },
-                { @"\^{o}", "°" },
+                { @"\^o", "°" },
                 { @"\?\?\s?C(elsius)?", "°C" },
-                { @"{?\\celsius}", "°C" },
+                { @"\\?celsius", "°C" },
                 { @"\?\?F", "°F" },
-                { @"{?\\fahrenheit}", "°F" },
-                { @"\$\\?times\$", "X" },
+                { @"\\?fahrenheit", "°F" },
+                { @"\$\\?times\$?", "×" },
                 { @"\\[,;]" , " "},
                 { @"\\cdot" , "⋅"},
-           
+                { @"\\ldots", "…" },
+                { @"---", "—" },
+                { @"--", "–" },
+                
+                // Greek letters and symbols
                 { @"\\Delta" , "Δ"},
                 { @"\\rho", "ρ" },
+                { @"\\alpha", "α" },
+                { @"\\beta", "β" },
+                { @"\\gamma", "γ" },
+                { @"\\mu", "μ" },
+                { @"\\sigma", "σ" },
+                { @"\\omega", "ω" },
+                { @"\\Omega", "Ω" },
+                { @"\\tau", "τ" },
+                { @"\\phi", "φ" },
+                { @"\\Phi", "Φ" },
+
+                // Braces
                 { @"(\\{)|({\\ )", "{" },
                 { @"(\\})|(}\\)", "}" },
 
             };
 
             var replacedText = text;
+
             foreach (var item in removes)
             {
                 replacedText = Regex.Replace(replacedText, item, string.Empty, RegexOptions.IgnoreCase);
@@ -138,7 +154,30 @@ namespace EPDoc2Json
                 replacedText = Regex.Replace(replacedText, item.Key, item.Value, RegexOptions.IgnoreCase);
             }
 
-            return replacedText;
+            // Iterative replacements for nested or complex patterns
+            string previous;
+            do
+            {
+                previous = replacedText;
+                // Superscripts: m^{3} -> m³
+                replacedText = Regex.Replace(replacedText, @"\^\{(-?\d+)\}", m => ToSuperscript(m.Groups[1].Value));
+                // Subscripts: H_{2}O -> H₂O
+                replacedText = Regex.Replace(replacedText, @"_\{(-?\d+)\}", m => ToSubscript(m.Groups[1].Value));
+                // Simple fractions: \frac{a}{b} -> a/b
+                replacedText = Regex.Replace(replacedText, @"\\frac\{(.*?)\}\{(.*?)\}", "$1/$2");
+                // Remove remaining braces around single characters/words
+                replacedText = Regex.Replace(replacedText, @"\{([a-zA-Z0-9\.]+)\}", "$1");
+            } while (previous != replacedText);
+
+            // Final cleanup
+            replacedText = replacedText.Replace("$", "") // remove math mode delimiters
+                                     .Replace("~", "") // replace tilde with space
+                                     .Trim();
+
+            // Remove some known larger blocks that are hard with single-line regex
+            replacedText = Regex.Replace(replacedText, @"\\def\\labelenumi.*?\}", "", RegexOptions.Singleline);
+
+            return replacedText.Trim();
         }
 
         static dynamic LoopSubsection(ref int CurrentIndex, int TotalCount, ref List<string> AllLines)
@@ -310,6 +349,28 @@ namespace EPDoc2Json
                 paragraph.Note = note;
 
             return paragraph;
+        }
+
+        private static string ToSuperscript(string input)
+        {
+            var superscriptMap = new Dictionary<char, char>
+            {
+                { '0', '⁰' }, { '1', '¹' }, { '2', '²' }, { '3', '³' }, { '4', '⁴' },
+                { '5', '⁵' }, { '6', '⁶' }, { '7', '⁷' }, { '8', '⁸' }, { '9', '⁹' },
+                { '-', '⁻' }
+            };
+            return new string(input.Select(c => superscriptMap.ContainsKey(c) ? superscriptMap[c] : c).ToArray());
+        }
+
+        private static string ToSubscript(string input)
+        {
+            var subscriptMap = new Dictionary<char, char>
+            {
+                { '0', '₀' }, { '1', '₁' }, { '2', '₂' }, { '3', '₃' }, { '4', '₄' },
+                { '5', '₅' }, { '6', '₆' }, { '7', '₇' }, { '8', '₈' }, { '9', '₉' },
+                { '-', '₋' }
+            };
+            return new string(input.Select(c => subscriptMap.ContainsKey(c) ? subscriptMap[c] : c).ToArray());
         }
     }
 }

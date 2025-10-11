@@ -14,9 +14,9 @@ namespace EPDoc2Json
             //var dir = @"..\..\..\..\Doc\";
             //var texfiles = Directory.GetFiles(dir, "*.tex");
 
-            var folder = $"./download";
+            var folder = System.IO.Path.GetFullPath($"./download");
             Directory.CreateDirectory(folder);
-            var outputFolder = $"./outputs";
+            var outputFolder = System.IO.Path.GetFullPath($"./outputs");
             Directory.CreateDirectory(outputFolder);
 
             foreach (var texfile in _texList)
@@ -24,11 +24,11 @@ namespace EPDoc2Json
                 DownloadTex(folder, texfile).GetAwaiter().GetResult();
             }
 
-            foreach (var texfile in _texList)
+            Parallel.ForEach(_texList, texfile =>
             {
                 var tex = Path.Combine(folder, texfile);
                 ProcessSingleFile(outputFolder, tex);
-            }
+            });
 
             Console.WriteLine($"All files are generated in {outputFolder}.");
             Console.WriteLine("Press ANY key to close.");
@@ -40,26 +40,34 @@ namespace EPDoc2Json
 
             "group-air-distribution-equipment.tex",
             "group-air-distribution.tex",
-            "group-condenser-equipment.tex",
+            "group-air-path.tex",
             "group-coil-cooling-dx.tex",
+            "group-condenser-equipment.tex",
             "group-controllers.tex",
             "group-design-objects.tex",
+            "group-electric-load-center-generator.tex",
+            "group-energy-management-system-ems.tex",
+            "group-evaporative-coolers.tex",
             "group-fans.tex",
             "group-heat-recovery.tex",
             "group-heating-and-cooling-coils.tex",
             "group-humidifiers-and-dehumidifiers.tex",
+            "group-node-branch-management.tex",
+            "group-non-zone-equipment.tex",
             "group-performance-curves.tex",
+            "group-plant-condenser-control.tex",
             "group-plant-condenser-loops.tex",
             "group-plant-equipment.tex",
             "group-pumps.tex",
             "group-radiative-convective-units.tex",
+            "group-setpoint-managers.tex",
+            "group-solar-collectors.tex",
             "group-unitary-equipment.tex",
             "group-variable-refrigerant-flow-equipment.tex",
             "group-water-systems.tex",
             "group-water-heaters.tex",
             "group-zone-equipment.tex",
             "group-zone-forced-air-units.tex",
-            "group-setpoint-managers.tex",
 
         };
 
@@ -89,7 +97,7 @@ namespace EPDoc2Json
             // Output into DocJson/*.json
             FileInfo f = new FileInfo(TexFilePath);
             var JsonFilePath = Path.Combine(folder, Path.ChangeExtension(f.Name, ".json"));
-            Console.WriteLine(TexFilePath, JsonFilePath);
+            Console.WriteLine($"Processing {f.Name}");
 
             SaveAsJson(JsonFilePath, sectionObj);
 
